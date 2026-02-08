@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dree | Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --candle-color: rgba(255, 140, 0, 0.15);
+            --bg-color: #000000;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            font-family: 'Inter', sans-serif;
+            color: white;
+            display: flex;
+            justify-content: center;
+            /* Centraliza o card verticalmente na tela */
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .identity-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.12;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='150' height='150' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23fff' stroke-width='0.4'%3E%3Cpath d='M10 10l5 5-5 5M25 10l-5 5 5 5' /%3E%3Ccircle cx='50' cy='80' r='8' /%3E%3Cpath d='M45 72v-5M55 72v-5' /%3E%3Crect x='70' y='20' width='15' height='20' rx='5' /%3E%3Cpath d='M70 30h15' /%3E%3Cpath d='M10 80h20M20 70v20' stroke-dasharray='1 1' /%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        #mouse-light {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, var(--candle-color) 0%, rgba(255, 100, 0, 0.05) 30%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            animation: flicker 3s infinite alternate;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1.03); }
+        }
+
+        .glass-card {
+            position: relative;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 28px;
+            padding: 40px;
+            width: 85%;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .profile-pic {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 20px;
+            object-fit: cover;
+            /* Alinha o conteúdo da foto pelo topo */
+            object-position: top;
+        }
+
+        h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
+        .bio { color: #888; font-size: 0.85rem; margin-bottom: 30px; }
+
+        .links-container { display: flex; flex-direction: column; gap: 12px; }
+
+        .link-btn {
+            display: block;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            text-decoration: none;
+            padding: 16px;
+            border-radius: 14px;
+            transition: 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.95rem;
+        }
+
+        .link-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 140, 0, 0.4);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="identity-overlay"></div>
+    <div id="mouse-light"></div>
+
+    <div class="glass-card">
+        <img src="https://lh3.googleusercontent.com/pw/AP1GczMHY54S59lzm9tR_4jnxARGJBGOaavqxSxHhJyHwwajwZ9ZZAZYjdDGW-lx7zwW6giesIVxCgXIPZLsZN0wG8tTELncrRVgMBEhuU3OqujUQqsvp6WjRVDvd_d-EkGbRb9e326ISktPMoRsksGcBMe-xQ=w1074-h1912-s-no?authuser=0" alt="Dree" class="profile-pic">
+
+        <h1>Dree</h1>
+        <div class="bio">Ancestralidade • Tech</div>
+
+        <div class="links-container">
+            <a href="https://instagram.com/eusoudree" class="link-btn" target="_blank">Instagram</a>
+            <a href="https://wa.me/5512981946599" class="link-btn" target="_blank">WhatsApp</a>
+            <a href="mailto:oi@dree.one" class="link-btn">E-mail</a>
+        </div>
+    </div>
+
+    <script>
+        const light = document.getElementById('mouse-light');
+        document.addEventListener('mousemove', (e) => {
+            light.style.left = e.clientX + 'px';
+            light.style.top = e.clientY + 'px';
+        });
+    </script>
+</body>
+</html>
