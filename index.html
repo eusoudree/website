@@ -6,105 +6,70 @@
     <title>DREE | Hub </title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --accent: #ff8c00;
-            --bg: #000000;
-        }
-
+        :root { --accent: #ff8c00; --bg: #000000; }
         body {
-            margin: 0; padding: 0;
-            background-color: var(--bg);
-            font-family: 'Inter', sans-serif;
-            color: white;
+            margin: 0; padding: 0; background-color: var(--bg);
+            font-family: 'Inter', sans-serif; color: white;
             display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; overflow-x: hidden;
-            flex-direction: column;
+            min-height: 100vh; overflow: hidden; flex-direction: column;
         }
-
         #nebula-canvas {
-            position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: -1; filter: blur(60px);
-            opacity: 0; transition: opacity 2s ease;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; filter: blur(40px); opacity: 0; transition: opacity 2s ease;
         }
-
         #mouse-light {
             position: fixed; width: 600px; height: 600px;
             background: radial-gradient(circle, rgba(255, 140, 0, 0.12) 0%, transparent 70%);
-            border-radius: 50%; pointer-events: none;
-            transform: translate(-50%, -50%); z-index: 3;
+            border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); z-index: 3;
         }
-
         .glass-card {
-            position: relative; z-index: 10;
-            background: rgba(255, 255, 255, 0.02);
+            position: relative; z-index: 10; background: rgba(255, 255, 255, 0.02);
             backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 40px; padding: 50px 30px;
-            width: 85%; max-width: 350px; text-align: center;
-            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 40px;
+            padding: 50px 30px; width: 85%; max-width: 350px; text-align: center;
+            transition: all 0.5s ease;
         }
-
-        /* Container da Agenda Inline */
-        #calendar-container {
-            display: none;
-            width: 95%;
-            max-width: 900px;
-            background: rgba(255, 255, 255, 0.95); /* Fundo claro para legibilidade da agenda */
-            border-radius: 30px;
-            overflow: hidden;
-            z-index: 20;
-            animation: slideUp 0.8s ease forwards;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
         .profile-pic {
             width: 130px; height: 130px; border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.2);
-            margin-bottom: 25px; object-fit: cover;
-            object-position: top !important;
-            cursor: pointer; transition: 0.4s;
+            border: 2px solid rgba(255,255,255,0.2); margin-bottom: 25px;
+            object-fit: cover; object-position: top !important; cursor: pointer;
         }
-
         .links-container { display: flex; flex-direction: column; gap: 15px; }
         .link-btn {
-            background: rgba(255, 255, 255, 0.06); color: white;
-            text-decoration: none; padding: 18px; border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.05); font-weight: 500;
-            transition: 0.3s; cursor: pointer;
+            background: rgba(255, 255, 255, 0.06); color: white; text-decoration: none;
+            padding: 18px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.05);
+            font-weight: 500; transition: 0.3s; cursor: pointer;
         }
         .link-btn:hover { background: rgba(255, 255, 255, 0.12); border-color: var(--accent); }
-
-        .btn-agenda {
-            background: rgba(255, 140, 0, 0.15);
-            border: 1px solid var(--accent);
-            color: var(--accent);
-            font-weight: 700;
+        #calendar-container {
+            display: none; width: 95%; max-width: 900px; background: #fff;
+            border-radius: 25px; overflow: hidden; z-index: 20;
         }
-
+        .back-btn {
+            margin-top: 20px; color: var(--accent); cursor: pointer;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+            text-transform: uppercase; display: none; z-index: 21;
+        }
         .game-hint {
-            margin-top: 25px; font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem; color: var(--accent); letter-spacing: 1px;
-            text-transform: uppercase; opacity: 0.8;
+            margin-top: 25px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+            color: var(--accent); letter-spacing: 1px; text-transform: uppercase;
             animation: pulse 2s infinite ease-in-out; z-index: 10;
         }
-
         @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
-
         #game-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             display: none; z-index: 100; justify-content: center; align-items: center;
         }
-
-        canvas#gameCanvas { width: 85%; height: 80%; border: 1px solid #333; background: rgba(0,0,0,0.92); }
-
-        .back-btn {
-            margin-top: 20px; color: var(--accent); cursor: pointer; font-size: 0.8rem; text-transform: uppercase;
+        canvas#gameCanvas { width: 90%; height: 85%; background: #000; border-radius: 20px; }
+        #game-over-screen {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px;
+            padding: 40px; text-align: center; display: none; z-index: 110;
         }
+        .retry-btn { margin-top: 20px; padding: 15px 40px; background: var(--accent); border: none; border-radius: 15px; color: black; font-weight: bold; cursor: pointer; }
+        .burn-out { animation: burnOut 0.6s forwards; }
+        @keyframes burnOut { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.4); opacity: 0; } }
     </style>
 </head>
 <body>
@@ -116,9 +81,8 @@
         <img src="https://lh3.googleusercontent.com/pw/AP1GczMHY54S59lzm9tR_4jnxARGJBGOaavqxSxHhJyHwwajwZ9ZZAZYjdDGW-lx7zwW6giesIVxCgXIPZLsZN0wG8tTELncrRVgMBEhuU3OqujUQqsvp6WjRVDvd_d-EkGbRb9e326ISktPMoRsksGcBMe-xQ=w1074-h1912-s-no?authuser=0" alt="Dree" class="profile-pic" id="profile-img">
         <h1 style="font-size: 2.2rem; margin: 0; letter-spacing: -1px;">Dree</h1>
         <p style="color: #888; margin-bottom: 35px; letter-spacing: 2px; font-size: 0.8rem;">ANCESTRALIDADE • TECH</p>
-
         <div class="links-container">
-            <div class="link-btn btn-agenda" onclick="showCalendar()">Agendar Horário</div>
+            <div class="link-btn" onclick="showCalendar()">Agendar Horário</div>
             <a href="https://instagram.com/eusoudree" class="link-btn" target="_blank">Instagram</a>
             <a href="https://wa.me/5512981946599" class="link-btn" target="_blank">WhatsApp</a>
             <a href="mailto:oi@dree.one" class="link-btn">E-mail</a>
@@ -127,70 +91,162 @@
 
     <div id="calendar-container">
         <iframe src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ0kEW_PnQRN8-AYP7V1mLWdGMSgLtteOFyRNqcCAHUlVQDtDTYsa1YyR2snUfDXq8z4xTWyoQXm?gv=true" style="border: 0" width="100%" height="600" frameborder="0"></iframe>
-        </div>
-    <div id="back-from-cal" class="back-btn" style="display:none" onclick="hideCalendar()">← Voltar</div>
+    </div>
+    <div id="back-btn" class="back-btn" onclick="hideCalendar()">← Voltar ao Hub</div>
 
     <div class="game-hint" id="game-hint">clique na foto para defender o seu legado</div>
 
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
-        <div id="game-over-screen" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px; padding: 40px; text-align: center; display: none; z-index: 110;">
-            <h2 style="color:var(--accent); margin-top:0; font-family:'JetBrains Mono'">GAME OVER</h2>
+        <div id="game-over-screen">
+            <h2 style="color:var(--accent); font-family:'JetBrains Mono'">SISTEMA COMPROMETIDO</h2>
             <div style="font-size: 1.5rem; margin: 20px 0;">PONTOS: <span id="final-score">0</span></div>
-            <button class="retry-btn" style="margin-top: 20px; padding: 15px 40px; background: var(--accent); border: none; border-radius: 15px; color: black; font-weight: bold; cursor: pointer;" onclick="location.reload()">RECONECTAR SISTEMA</button>
+            <button class="retry-btn" onclick="location.reload()">RECONECTAR</button>
         </div>
     </div>
 
     <script>
         const card = document.getElementById('main-card');
         const calContainer = document.getElementById('calendar-container');
-        const backBtn = document.getElementById('back-from-cal');
+        const backBtn = document.getElementById('back-btn');
         const hint = document.getElementById('game-hint');
-
-        // Função para mostrar a agenda inline
-        function showCalendar() {
-            card.style.transform = "scale(0.8)";
-            card.style.opacity = "0";
-            setTimeout(() => {
-                card.style.display = "none";
-                hint.style.display = "none";
-                calContainer.style.display = "block";
-                backBtn.style.display = "block";
-            }, 600);
-        }
-
-        // Função para voltar ao Hub
-        function hideCalendar() {
-            calContainer.style.display = "none";
-            backBtn.style.display = "none";
-            card.style.display = "block";
-            hint.style.display = "block";
-            setTimeout(() => {
-                card.style.transform = "scale(1)";
-                card.style.opacity = "1";
-            }, 10);
-        }
-
-        // --- LÓGICA ORIGINAL DO MOUSE E NEBULA ---
-        const light = document.getElementById('mouse-light');
-        const nebulaCanvas = document.getElementById('nebula-canvas');
-        const nCtx = nebulaCanvas.getContext('2d');
         const profileImg = document.getElementById('profile-img');
+        const nebulaCanvas = document.getElementById('nebula-canvas');
+        const gameCanvas = document.getElementById('gameCanvas');
+        const nCtx = nebulaCanvas.getContext('2d');
+        const gCtx = gameCanvas.getContext('2d');
+
+        let particles = [], enemies = [], shots = [];
+        let gameActive = false, score = 0, lastS = 0;
+        let player = { x: 80, y: 300 };
+
+        function showCalendar() { card.style.display="none"; hint.style.display="none"; calContainer.style.display="block"; backBtn.style.display="block"; }
+        function hideCalendar() { calContainer.style.display="none"; backBtn.style.display="none"; card.style.display="block"; hint.style.display="block"; }
+
+        function setup() {
+            nebulaCanvas.width = window.innerWidth; nebulaCanvas.height = window.innerHeight;
+            gameCanvas.width = window.innerWidth * 0.9; gameCanvas.height = window.innerHeight * 0.85;
+        }
+        window.onresize = setup; setup();
 
         document.onmousemove = (e) => {
-            light.style.left = e.clientX + 'px';
-            light.style.top = e.clientY + 'px';
+            document.getElementById('mouse-light').style.left = e.clientX + 'px';
+            document.getElementById('mouse-light').style.top = e.clientY + 'px';
             if(gameActive) {
                 const r = gameCanvas.getBoundingClientRect();
-                player.y = (e.clientY - r.top) - 25;
+                player.y = e.clientY - r.top;
             }
         };
 
-        // ... Restante do seu código de partículas e jogo ...
-        // (Mantive a estrutura para você apenas colar seu código de jogo aqui ou usar o que já enviei antes)
+        profileImg.onclick = () => {
+            if(gameActive) return;
+            card.classList.add('burn-out'); hint.style.display = 'none';
+            setTimeout(() => {
+                card.style.display = 'none';
+                document.getElementById('game-container').style.display = 'flex';
+                nebulaCanvas.style.opacity = "1";
+                gameActive = true;
+                spawnEnemies();
+                requestAnimationFrame(loop);
+            }, 600);
+        };
 
-        // [AQUI VAI TODA A LÓGICA DO JOGO QUE VOCÊ JÁ TEM]
-        // Basta garantir que a variável gameActive e as funções de desenho estejam presentes.
+        function spawnEnemies() {
+            if(!gameActive) return;
+            enemies.push({ x: gameCanvas.width + 50, y: Math.random()*(gameCanvas.height-60), w: 35, h: 50, spd: 4 + (score/500) });
+            setTimeout(spawnEnemies, Math.max(400, 1000 - (score*1.2)));
+        }
+
+        function drawSkeleton(x, y) {
+            const c = "#ff8c00"; gCtx.strokeStyle = c; gCtx.lineWidth = 2.5;
+            gCtx.shadowBlur = 15; gCtx.shadowColor = c;
+
+            // CABEÇA E OLHO
+            gCtx.beginPath();
+            gCtx.arc(x, y-40, 12, 0, Math.PI*2);
+            gCtx.moveTo(x+3, y-43); gCtx.arc(x+3, y-43, 1, 0, Math.PI*2); // Pupila
+            gCtx.stroke();
+
+            // CORPO COMPLETO
+            gCtx.beginPath();
+            gCtx.moveTo(x, y-28); gCtx.lineTo(x, y+10); // Coluna
+            gCtx.moveTo(x-15, y-22); gCtx.lineTo(x+15, y-22); // Ombros
+
+            // COSTELAS (Detalhe recuperado)
+            for(let i=0; i<3; i++) {
+                gCtx.moveTo(x-10, y-15+(i*5)); gCtx.lineTo(x+10, y-15+(i*5));
+            }
+
+            // BACIA E PERNAS
+            gCtx.moveTo(x-10, y+10); gCtx.lineTo(x+10, y+10); // Bacia
+            gCtx.moveTo(x-8, y+10); gCtx.lineTo(x-12, y+35); // Perna E
+            gCtx.moveTo(x+8, y+10); gCtx.lineTo(x+12, y+35); // Perna D
+
+            // BRAÇO SEGURANDO O TRIDENTE
+            gCtx.moveTo(x+15, y-22); gCtx.lineTo(x+40, y-15);
+            gCtx.stroke();
+
+            // TRIDENTE HORIZONTAL (Melhorado)
+            const tx = x + 40, ty = y - 15;
+            gCtx.lineWidth = 3; gCtx.beginPath();
+            gCtx.moveTo(tx, ty); gCtx.lineTo(tx + 65, ty); // Cabo
+            gCtx.moveTo(tx + 65, ty - 15); gCtx.lineTo(tx + 65, ty + 15); // Base das pontas
+            gCtx.moveTo(tx + 65, ty - 15); gCtx.lineTo(tx + 85, ty - 15); // Ponta Superior
+            gCtx.moveTo(tx + 65, ty); gCtx.lineTo(tx + 95, ty); // Ponta Central
+            gCtx.moveTo(tx + 65, ty + 15); gCtx.lineTo(tx + 85, ty + 15); // Ponta Inferior
+            gCtx.stroke();
+            gCtx.shadowBlur = 0;
+        }
+
+        function drawGrave(en) {
+            // LÁPIDE COM DETALHES (Cruz recuperada)
+            gCtx.fillStyle = "#1a1a1a"; gCtx.strokeStyle = "#444";
+            gCtx.lineWidth = 2;
+            gCtx.beginPath();
+            gCtx.roundRect(en.x, en.y, en.w, en.h, [12, 12, 0, 0]);
+            gCtx.fill(); gCtx.stroke();
+
+            // DETALHE DA CRUZ NA LÁPIDE
+            gCtx.strokeStyle = "rgba(255, 140, 0, 0.4)";
+            gCtx.beginPath();
+            gCtx.moveTo(en.x + en.w/2, en.y + 10); gCtx.lineTo(en.x + en.w/2, en.y + 35);
+            gCtx.moveTo(en.x + 10, en.y + 20); gCtx.lineTo(en.x + en.w - 10, en.y + 20);
+            gCtx.stroke();
+        }
+
+        function loop(t) {
+            if(!gameActive) return;
+            gCtx.clearRect(0,0, gameCanvas.width, gameCanvas.height);
+            drawSkeleton(player.x, player.y);
+
+            if(t - lastS > 180) { shots.push({ x: player.x + 130, y: player.y - 15 }); lastS = t; }
+
+            shots.forEach((s, i) => {
+                s.x += 16; gCtx.fillStyle = "#ff8c00";
+                gCtx.shadowBlur = 10; gCtx.shadowColor = "#ff8c00";
+                gCtx.beginPath(); gCtx.arc(s.x, s.y, 4, 0, Math.PI*2); gCtx.fill();
+                gCtx.shadowBlur = 0;
+                if(s.x > gameCanvas.width) shots.splice(i, 1);
+                enemies.forEach((en, ei) => {
+                    if(s.x > en.x && s.x < en.x+en.w && s.y > en.y && s.y < en.y+en.h) {
+                        enemies.splice(ei, 1); shots.splice(i, 1); score += 10;
+                    }
+                });
+            });
+
+            enemies.forEach(en => {
+                en.x -= en.spd;
+                drawGrave(en);
+                if(en.x < 0) {
+                    gameActive = false;
+                    document.getElementById('final-score').innerText = score;
+                    document.getElementById('game-over-screen').style.display = 'block';
+                }
+            });
+            gCtx.fillStyle = "#ff8c00"; gCtx.font = "bold 18px JetBrains Mono";
+            gCtx.fillText("LEGACY_SHIELD: " + score, 30, 50);
+            requestAnimationFrame(loop);
+        }
     </script>
 </body>
 </html>
