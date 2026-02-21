@@ -105,148 +105,159 @@
         </div>
     </div>
 
-    <script>
-        const card = document.getElementById('main-card');
-        const calContainer = document.getElementById('calendar-container');
-        const backBtn = document.getElementById('back-btn');
-        const hint = document.getElementById('game-hint');
-        const profileImg = document.getElementById('profile-img');
-        const nebulaCanvas = document.getElementById('nebula-canvas');
-        const gameCanvas = document.getElementById('gameCanvas');
-        const nCtx = nebulaCanvas.getContext('2d');
-        const gCtx = gameCanvas.getContext('2d');
+   <script>
+    const card = document.getElementById('main-card');
+    const calContainer = document.getElementById('calendar-container');
+    const backBtn = document.getElementById('back-btn');
+    const hint = document.getElementById('game-hint');
+    const profileImg = document.getElementById('profile-img');
+    const nebulaCanvas = document.getElementById('nebula-canvas');
+    const gameCanvas = document.getElementById('gameCanvas');
+    const nCtx = nebulaCanvas.getContext('2d');
+    const gCtx = gameCanvas.getContext('2d');
 
-        let particles = [], enemies = [], shots = [];
-        let gameActive = false, score = 0, lastS = 0;
-        let player = { x: 80, y: 300 };
+    let particles = [], enemies = [], shots = [];
+    let gameActive = false, score = 0, lastS = 0;
+    let player = { x: 50, y: 300 };
 
-        function showCalendar() { card.style.display="none"; hint.style.display="none"; calContainer.style.display="block"; backBtn.style.display="block"; }
-        function hideCalendar() { calContainer.style.display="none"; backBtn.style.display="none"; card.style.display="block"; hint.style.display="block"; }
+    function showCalendar() { card.style.display="none"; hint.style.display="none"; calContainer.style.display="block"; backBtn.style.display="block"; }
+    function hideCalendar() { calContainer.style.display="none"; backBtn.style.display="none"; card.style.display="block"; hint.style.display="block"; }
 
-        function setup() {
-            nebulaCanvas.width = window.innerWidth; nebulaCanvas.height = window.innerHeight;
-            gameCanvas.width = window.innerWidth * 0.9; gameCanvas.height = window.innerHeight * 0.85;
+    function setup() {
+        nebulaCanvas.width = window.innerWidth; 
+        nebulaCanvas.height = window.innerHeight;
+        gameCanvas.width = window.innerWidth * 0.95; 
+        gameCanvas.height = window.innerHeight * 0.8;
+        player.y = gameCanvas.height / 2;
+    }
+    window.onresize = setup; setup();
+
+    // Função que resolve o bug do Mobile + Desktop
+    function handleMove(e) {
+        if(!gameActive) return;
+        let clientY;
+        if(e.type === 'touchstart' || e.type === 'touchmove') {
+            clientY = e.touches[0].clientY;
+            if(e.cancelable) e.preventDefault(); // Trava o scroll da página pra não bugar
+        } else {
+            clientY = e.clientY;
         }
-        window.onresize = setup; setup();
-
-        document.onmousemove = (e) => {
-            document.getElementById('mouse-light').style.left = e.clientX + 'px';
-            document.getElementById('mouse-light').style.top = e.clientY + 'px';
-            if(gameActive) {
-                const r = gameCanvas.getBoundingClientRect();
-                player.y = e.clientY - r.top;
-            }
-        };
-
-        profileImg.onclick = () => {
-            if(gameActive) return;
-            card.classList.add('burn-out'); hint.style.display = 'none';
-            setTimeout(() => {
-                card.style.display = 'none';
-                document.getElementById('game-container').style.display = 'flex';
-                nebulaCanvas.style.opacity = "1";
-                gameActive = true;
-                spawnEnemies();
-                requestAnimationFrame(loop);
-            }, 600);
-        };
-
-        function spawnEnemies() {
-            if(!gameActive) return;
-            enemies.push({ x: gameCanvas.width + 50, y: Math.random()*(gameCanvas.height-60), w: 35, h: 50, spd: 4 + (score/500) });
-            setTimeout(spawnEnemies, Math.max(400, 1000 - (score*1.2)));
+        const r = gameCanvas.getBoundingClientRect();
+        let targetY = clientY - r.top;
+        if(targetY > 0 && targetY < gameCanvas.height) {
+            player.y = targetY;
         }
+    }
 
-        function drawSkeleton(x, y) {
-            const c = "#ff8c00"; gCtx.strokeStyle = c; gCtx.lineWidth = 2.5;
-            gCtx.shadowBlur = 15; gCtx.shadowColor = c;
+    // Eventos de movimento
+    document.addEventListener('mousemove', (e) => {
+        document.getElementById('mouse-light').style.left = e.clientX + 'px';
+        document.getElementById('mouse-light').style.top = e.clientY + 'px';
+        handleMove(e);
+    });
+    gameCanvas.addEventListener('touchstart', handleMove, {passive: false});
+    gameCanvas.addEventListener('touchmove', handleMove, {passive: false});
 
-            // CABEÇA E OLHO
-            gCtx.beginPath();
-            gCtx.arc(x, y-40, 12, 0, Math.PI*2);
-            gCtx.moveTo(x+3, y-43); gCtx.arc(x+3, y-43, 1, 0, Math.PI*2); // Pupila
-            gCtx.stroke();
+    profileImg.onclick = () => {
+        if(gameActive) return;
+        card.classList.add('burn-out'); hint.style.display = 'none';
+        setTimeout(() => {
+            card.style.display = 'none';
+            document.getElementById('game-container').style.display = 'flex';
+            nebulaCanvas.style.opacity = "1";
+            gameActive = true;
+            score = 0; enemies = []; shots = [];
+            spawnEnemies();
+            requestAnimationFrame(loop);
+        }, 600);
+    };
 
-            // CORPO COMPLETO
-            gCtx.beginPath();
-            gCtx.moveTo(x, y-28); gCtx.lineTo(x, y+10); // Coluna
-            gCtx.moveTo(x-15, y-22); gCtx.lineTo(x+15, y-22); // Ombros
+    function spawnEnemies() {
+        if(!gameActive) return;
+        enemies.push({ 
+            x: gameCanvas.width + 50, 
+            y: Math.random()*(gameCanvas.height-60), 
+            w: 30, h: 45, 
+            spd: 3 + (score/250) 
+        });
+        setTimeout(spawnEnemies, Math.max(500, 1200 - (score*1.5)));
+    }
 
-            // COSTELAS (Detalhe recuperado)
-            for(let i=0; i<3; i++) {
-                gCtx.moveTo(x-10, y-15+(i*5)); gCtx.lineTo(x+10, y-15+(i*5));
-            }
+    function drawSkeleton(x, y) {
+        const c = "#ff8c00"; gCtx.strokeStyle = c; gCtx.lineWidth = 2.5;
+        gCtx.shadowBlur = 15; gCtx.shadowColor = c;
+        gCtx.beginPath();
+        gCtx.arc(x, y-40, 12, 0, Math.PI*2);
+        gCtx.stroke();
+        gCtx.beginPath();
+        gCtx.moveTo(x, y-28); gCtx.lineTo(x, y+10);
+        gCtx.moveTo(x-15, y-22); gCtx.lineTo(x+15, y-22);
+        for(let i=0; i<3; i++) {
+            gCtx.moveTo(x-10, y-15+(i*5)); gCtx.lineTo(x+10, y-15+(i*5));
+        }
+        gCtx.moveTo(x-10, y+10); gCtx.lineTo(x+10, y+10);
+        gCtx.moveTo(x-8, y+10); gCtx.lineTo(x-12, y+35);
+        gCtx.moveTo(x+8, y+10); gCtx.lineTo(x+12, y+35);
+        gCtx.moveTo(x+15, y-22); gCtx.lineTo(x+40, y-15);
+        gCtx.stroke();
+        const tx = x + 40, ty = y - 15;
+        gCtx.lineWidth = 3; gCtx.beginPath();
+        gCtx.moveTo(tx, ty); gCtx.lineTo(tx + 50, ty);
+        gCtx.moveTo(tx + 50, ty - 12); gCtx.lineTo(tx + 50, ty + 12);
+        gCtx.moveTo(tx + 50, ty - 12); gCtx.lineTo(tx + 65, ty - 12);
+        gCtx.moveTo(tx + 50, ty); gCtx.lineTo(tx + 75, ty);
+        gCtx.moveTo(tx + 50, ty + 12); gCtx.lineTo(tx + 65, ty + 12);
+        gCtx.stroke();
+        gCtx.shadowBlur = 0;
+    }
 
-            // BACIA E PERNAS
-            gCtx.moveTo(x-10, y+10); gCtx.lineTo(x+10, y+10); // Bacia
-            gCtx.moveTo(x-8, y+10); gCtx.lineTo(x-12, y+35); // Perna E
-            gCtx.moveTo(x+8, y+10); gCtx.lineTo(x+12, y+35); // Perna D
+    function drawGrave(en) {
+        gCtx.fillStyle = "#1a1a1a"; gCtx.strokeStyle = "#444";
+        gCtx.lineWidth = 2;
+        gCtx.beginPath();
+        if (gCtx.roundRect) gCtx.roundRect(en.x, en.y, en.w, en.h, [12, 12, 0, 0]);
+        else gCtx.rect(en.x, en.y, en.w, en.h);
+        gCtx.fill(); gCtx.stroke();
+        gCtx.strokeStyle = "rgba(255, 140, 0, 0.4)";
+        gCtx.beginPath();
+        gCtx.moveTo(en.x + en.w/2, en.y + 10); gCtx.lineTo(en.x + en.w/2, en.y + 35);
+        gCtx.moveTo(en.x + 8, en.y + 20); gCtx.lineTo(en.x + en.w - 8, en.y + 20);
+        gCtx.stroke();
+    }
 
-            // BRAÇO SEGURANDO O TRIDENTE
-            gCtx.moveTo(x+15, y-22); gCtx.lineTo(x+40, y-15);
-            gCtx.stroke();
-
-            // TRIDENTE HORIZONTAL (Melhorado)
-            const tx = x + 40, ty = y - 15;
-            gCtx.lineWidth = 3; gCtx.beginPath();
-            gCtx.moveTo(tx, ty); gCtx.lineTo(tx + 65, ty); // Cabo
-            gCtx.moveTo(tx + 65, ty - 15); gCtx.lineTo(tx + 65, ty + 15); // Base das pontas
-            gCtx.moveTo(tx + 65, ty - 15); gCtx.lineTo(tx + 85, ty - 15); // Ponta Superior
-            gCtx.moveTo(tx + 65, ty); gCtx.lineTo(tx + 95, ty); // Ponta Central
-            gCtx.moveTo(tx + 65, ty + 15); gCtx.lineTo(tx + 85, ty + 15); // Ponta Inferior
-            gCtx.stroke();
+    function loop(t) {
+        if(!gameActive) return;
+        gCtx.clearRect(0,0, gameCanvas.width, gameCanvas.height);
+        drawSkeleton(player.x, player.y);
+        if(t - lastS > 200) { 
+            shots.push({ x: player.x + 90, y: player.y - 15 }); 
+            lastS = t; 
+        }
+        shots.forEach((s, i) => {
+            s.x += 14; gCtx.fillStyle = "#ff8c00";
+            gCtx.shadowBlur = 10; gCtx.shadowColor = "#ff8c00";
+            gCtx.beginPath(); gCtx.arc(s.x, s.y, 4, 0, Math.PI*2); gCtx.fill();
             gCtx.shadowBlur = 0;
-        }
-
-        function drawGrave(en) {
-            // LÁPIDE COM DETALHES (Cruz recuperada)
-            gCtx.fillStyle = "#1a1a1a"; gCtx.strokeStyle = "#444";
-            gCtx.lineWidth = 2;
-            gCtx.beginPath();
-            gCtx.roundRect(en.x, en.y, en.w, en.h, [12, 12, 0, 0]);
-            gCtx.fill(); gCtx.stroke();
-
-            // DETALHE DA CRUZ NA LÁPIDE
-            gCtx.strokeStyle = "rgba(255, 140, 0, 0.4)";
-            gCtx.beginPath();
-            gCtx.moveTo(en.x + en.w/2, en.y + 10); gCtx.lineTo(en.x + en.w/2, en.y + 35);
-            gCtx.moveTo(en.x + 10, en.y + 20); gCtx.lineTo(en.x + en.w - 10, en.y + 20);
-            gCtx.stroke();
-        }
-
-        function loop(t) {
-            if(!gameActive) return;
-            gCtx.clearRect(0,0, gameCanvas.width, gameCanvas.height);
-            drawSkeleton(player.x, player.y);
-
-            if(t - lastS > 180) { shots.push({ x: player.x + 130, y: player.y - 15 }); lastS = t; }
-
-            shots.forEach((s, i) => {
-                s.x += 16; gCtx.fillStyle = "#ff8c00";
-                gCtx.shadowBlur = 10; gCtx.shadowColor = "#ff8c00";
-                gCtx.beginPath(); gCtx.arc(s.x, s.y, 4, 0, Math.PI*2); gCtx.fill();
-                gCtx.shadowBlur = 0;
-                if(s.x > gameCanvas.width) shots.splice(i, 1);
-                enemies.forEach((en, ei) => {
-                    if(s.x > en.x && s.x < en.x+en.w && s.y > en.y && s.y < en.y+en.h) {
-                        enemies.splice(ei, 1); shots.splice(i, 1); score += 10;
-                    }
-                });
-            });
-
-            enemies.forEach(en => {
-                en.x -= en.spd;
-                drawGrave(en);
-                if(en.x < 0) {
-                    gameActive = false;
-                    document.getElementById('final-score').innerText = score;
-                    document.getElementById('game-over-screen').style.display = 'block';
+            if(s.x > gameCanvas.width) shots.splice(i, 1);
+            enemies.forEach((en, ei) => {
+                if(s.x > en.x && s.x < en.x+en.w && s.y > en.y && s.y < en.y+en.h) {
+                    enemies.splice(ei, 1); shots.splice(i, 1); score += 10;
                 }
             });
-            gCtx.fillStyle = "#ff8c00"; gCtx.font = "bold 18px JetBrains Mono";
-            gCtx.fillText("LEGACY_SHIELD: " + score, 30, 50);
-            requestAnimationFrame(loop);
-        }
-    </script>
+        });
+        enemies.forEach(en => {
+            en.x -= en.spd;
+            drawGrave(en);
+            if(en.x < 0) {
+                gameActive = false;
+                document.getElementById('final-score').innerText = score;
+                document.getElementById('game-over-screen').style.display = 'block';
+            }
+        });
+        gCtx.fillStyle = "#ff8c00"; gCtx.font = "bold 16px JetBrains Mono";
+        gCtx.fillText("SCORE: " + score, 20, 40);
+        requestAnimationFrame(loop);
+    }
+</script>
 </body>
 </html>
