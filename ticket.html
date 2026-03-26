@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DREE | Suporte Brazil with an S</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <style>
+        :root { --accent: #ff8c00; --bg: #000000; }
+        body {
+            margin: 0; padding: 0; background-color: var(--bg);
+            font-family: 'Inter', sans-serif; color: white;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; overflow: hidden; flex-direction: column;
+        }
+        /* Herança visual do Hub */
+        #nebula-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; filter: blur(40px); opacity: 0.8;
+        }
+        #mouse-light {
+            position: fixed; width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(255, 140, 0, 0.12) 0%, transparent 70%);
+            border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); z-index: 3;
+        }
+        .glass-card {
+            position: relative; z-index: 10; background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 40px;
+            padding: 40px 30px; width: 90%; max-width: 500px; text-align: center;
+        }
+        .links-container { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        .input-style {
+            background: rgba(255, 255, 255, 0.06); color: white; border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px; border-radius: 15px; outline: none; transition: 0.3s; font-family: 'Inter';
+        }
+        .input-style:focus { border-color: var(--accent); background: rgba(255, 255, 255, 0.1); }
+        .btn-submit {
+            background: var(--accent); color: black; font-weight: 700; border: none;
+            padding: 18px; border-radius: 20px; cursor: pointer; transition: 0.3s;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-submit:hover { transform: scale(1.02); opacity: 0.9; }
+        
+        /* Estilo da Lista (Checklist) */
+        .ticket-item {
+            background: rgba(255, 255, 255, 0.04); padding: 15px; border-radius: 15px;
+            margin-bottom: 10px; text-align: left; display: flex; align-items: center; gap: 15px;
+            border-left: 4px solid var(--accent);
+        }
+        .ticket-info { flex-grow: 1; }
+        .ticket-prio { font-size: 0.7rem; text-transform: uppercase; color: var(--accent); }
+        
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
+        .tab-btn { background: none; border: none; color: #888; cursor: pointer; font-family: 'JetBrains Mono'; font-size: 0.8rem; }
+        .tab-btn.active { color: var(--accent); border-bottom: 1px solid var(--accent); }
+    </style>
+</head>
+<body>
+
+    <canvas id="nebula-canvas"></canvas>
+    <div id="mouse-light"></div>
+
+    <div class="glass-card">
+        <h2 style="margin: 0; letter-spacing: -1px; color: var(--accent);">BRAZIL WITH AN S</h2>
+        <p style="font-size: 0.7rem; color: #888; margin-bottom: 20px; letter-spacing: 2px;">CENTRAL DE DEMANDAS</p>
+        
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('novo')">NOVA SOLICITAÇÃO</button>
+            <button class="tab-btn" onclick="switchTab('lista')">GESTÃO</button>
+        </div>
+
+        <div id="form-container" class="links-container">
+            <input type="text" id="nome" placeholder="Quem está pedindo? (Manu, Bruno...)" class="input-style">
+            <textarea id="solicitacao" placeholder="O que precisa ser feito?" class="input-style" style="min-height: 100px;"></textarea>
+            <select id="prioridade" class="input-style">
+                <option value="Baixa">Prioridade: Baixa</option>
+                <option value="Média" selected>Prioridade: Média</option>
+                <option value="Alta">Prioridade: Alta 🔥</option>
+            </select>
+            <button class="btn-submit" onclick="salvarTicket()">Registrar Ticket</button>
+        </div>
+
+        <div id="lista-container" class="links-container" style="display: none; max-height: 400px; overflow-y: auto;">
+            <div id="lista-content">
+                </div>
+        </div>
+    </div>
+
+    <a href="/" style="margin-top: 30px; color: #555; text-decoration: none; font-family: 'JetBrains Mono'; font-size: 0.7rem;">← VOLTAR AO HUB PRINCIPAL</a>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Inicialização do Supabase (Substitua pelas suas chaves depois)
+        const supabaseUrl = 'SUA_URL_DO_SUPABASE';
+        const supabaseKey = 'SUA_KEY_ANON_DO_SUPABASE';
+        const supabase = supabasejs.createClient(supabaseUrl, supabaseKey);
+
+        // Lógica de Mouse Light
+        document.addEventListener('mousemove', (e) => {
+            document.getElementById('mouse-light').style.left = e.clientX + 'px';
+            document.getElementById('mouse-light').style.top = e.clientY + 'px';
+        });
+
+        function switchTab(tab) {
+            const btns = document.querySelectorAll('.tab-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            if(tab === 'novo') {
+                document.getElementById('form-container').style.display = 'flex';
+                document.getElementById('lista-container').style.display = 'none';
+                btns[0].classList.add('active');
+            } else {
+                document.getElementById('form-container').style.display = 'none';
+                document.getElementById('lista-container').style.display = 'block';
+                btns[1].classList.add('active');
+                carregarTickets();
+            }
+        }
+
+        async function salvarTicket() {
+            const nome = document.getElementById('nome').value;
+            const solicitacao = document.getElementById('solicitacao').value;
+            const prioridade = document.getElementById('prioridade').value;
+
+            if(!nome || !solicitacao) return alert("Dree, avisa eles que precisam preencher o nome e a descrição!");
+
+            const { error } = await supabase
+                .from('tickets')
+                .insert([{ nome, solicitacao, prioridade, status: 'pendente' }]);
+
+            if(!error) {
+                alert("Legado atualizado. Ticket enviado!");
+                location.reload();
+            }
+        }
+
+        async function carregarTickets() {
+            const { data: tickets } = await supabase
+                .from('tickets')
+                .select('*')
+                .order('id', { ascending: false });
+
+            const content = document.getElementById('lista-content');
+            content.innerHTML = tickets.map(t => `
+                <div class="ticket-item" style="opacity: ${t.status === 'feito' ? '0.4' : '1'}">
+                    <input type="checkbox" onchange="alternarStatus(${t.id}, '${t.status}')" ${t.status === 'feito' ? 'checked' : ''}>
+                    <div class="ticket-info">
+                        <div style="font-weight: 700; font-size: 0.9rem;">${t.nome}</div>
+                        <div style="font-size: 0.8rem; color: #ccc;">${t.solicitacao}</div>
+                        <div class="ticket-prio">${t.prioridade}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function alternarStatus(id, statusAtual) {
+            const novoStatus = statusAtual === 'feito' ? 'pendente' : 'feito';
+            await supabase.from('tickets').update({ status: novoStatus }).eq('id', id);
+            carregarTickets();
+        }
+    </script>
+</body>
+</html>
