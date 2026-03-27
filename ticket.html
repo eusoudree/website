@@ -112,21 +112,24 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <script>
-        let supabase;
+        // Usei um nome que o SDK nunca usaria para evitar o erro de "already declared"
+        let supabaseClient;
 
-        async function initSupabase() {
+        function initSupabase() {
             try {
-                // Correção vital para o CDN: o objeto global é 'supabase' ou 'Supabase'
+                // Aqui pegamos o criador de client do objeto global que o script da linha acima injetou
                 const { createClient } = window.supabase; 
                 const supabaseUrl = 'https://gmyrhvyidkfskumwlhpc.supabase.co';
                 const supabaseKey = 'sb_publishable_vrShNwUfcsavxCbFUEkpZQ_73I8uKFJ';
-                supabase = createClient(supabaseUrl, supabaseKey);
-                console.log("Supabase Conectado");
+                
+                supabaseClient = createClient(supabaseUrl, supabaseKey);
+                console.log("Supabase pronto para o legado!");
             } catch (e) {
-                console.error("Erro ao inicializar Supabase:", e);
+                console.error("Erro na inicialização:", e);
             }
         }
 
+        // Lógica visual do mouse
         document.addEventListener('mousemove', (e) => {
             const light = document.getElementById('mouse-light');
             if(light) {
@@ -158,8 +161,8 @@
                 return;
             }
 
-            if(!supabase) {
-                alert("Sistema carregando... tente em 2 segundos.");
+            if(!supabaseClient) {
+                alert("Sistema ainda conectando... tente de novo em 1 segundo.");
                 return;
             }
 
@@ -167,7 +170,7 @@
             btn.innerText = "PROCESSANDO...";
 
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('tickets')
                     .insert([{ nome, solicitacao, prioridade, status: 'pendente' }]);
 
@@ -188,11 +191,11 @@
         }
 
         async function carregarTickets() {
-            if(!supabase) return;
+            if(!supabaseClient) return;
             const content = document.getElementById('lista-content');
             content.innerHTML = '<p style="color:#555">Sincronizando...</p>';
 
-            const { data: tickets, error } = await supabase
+            const { data: tickets, error } = await supabaseClient
                 .from('tickets')
                 .select('*')
                 .order('id', { ascending: false });
@@ -216,10 +219,11 @@
 
         async function alternarStatus(id, statusAtual) {
             const novoStatus = statusAtual === 'feito' ? 'pendente' : 'feito';
-            await supabase.from('tickets').update({ status: novoStatus }).eq('id', id);
+            await supabaseClient.from('tickets').update({ status: novoStatus }).eq('id', id);
             carregarTickets();
         }
 
+        // Garante que o sistema ligue assim que abrir
         window.onload = initSupabase;
     </script>
 </body>
