@@ -117,7 +117,7 @@ let supabase;
 
 async function initSupabase() {
     try {
-        const { createClient } = supabasejs;
+        const { createClient } = Supabase; // corrigido aqui
         const supabaseUrl = 'https://gmyrhvyidkfskumwlhpc.supabase.co';
         const supabaseKey = 'sb_publishable_vrShNwUfcsavxCbFUEkpZQ_73I8uKFJ';
         supabase = createClient(supabaseUrl, supabaseKey);
@@ -196,7 +196,7 @@ async function carregarTickets() {
     const { data: tickets, error } = await supabase
         .from('tickets')
         .select('*')
-                .order('id', { ascending: false });
+        .order('id', { ascending: false });
 
     if(error) {
         content.innerHTML = '<p style="color:red">Erro ao buscar dados.</p>';
