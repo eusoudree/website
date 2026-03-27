@@ -112,95 +112,117 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <script>
+       // Usando uma forma mais segura de garantir que o Supabase carregue
+let supabase;
+
+async function initSupabase() {
+    try {
+        const { createClient } = supabasejs;
         const supabaseUrl = 'https://gmyrhvyidkfskumwlhpc.supabase.co';
         const supabaseKey = 'sb_publishable_vrShNwUfcsavxCbFUEkpZQ_73I8uKFJ';
-        const supabase = supabasejs.createClient(supabaseUrl, supabaseKey);
+        supabase = createClient(supabaseUrl, supabaseKey);
+        console.log("Supabase Conectado");
+    } catch (e) {
+        console.error("Erro ao inicializar Supabase:", e);
+    }
+}
 
-        document.addEventListener('mousemove', (e) => {
-            const light = document.getElementById('mouse-light');
-            light.style.left = e.clientX + 'px';
-            light.style.top = e.clientY + 'px';
-        });
+// Lógica visual do mouse
+document.addEventListener('mousemove', (e) => {
+    const light = document.getElementById('mouse-light');
+    if(light) {
+        light.style.left = e.clientX + 'px';
+        light.style.top = e.clientY + 'px';
+    }
+});
 
-        function switchTab(tab) {
-            document.getElementById('form-container').style.display = (tab === 'novo') ? 'flex' : 'none';
-            document.getElementById('lista-container').style.display = (tab === 'lista') ? 'block' : 'none';
-            document.getElementById('success-msg').style.display = 'none';
-            document.getElementById('tabs-menu').style.display = 'flex';
-            
-            document.getElementById('tab-novo').classList.toggle('active', tab === 'novo');
-            document.getElementById('tab-lista').classList.toggle('active', tab === 'lista');
-            
-            if(tab === 'lista') carregarTickets();
+function switchTab(tab) {
+    document.getElementById('form-container').style.display = (tab === 'novo') ? 'flex' : 'none';
+    document.getElementById('lista-container').style.display = (tab === 'lista') ? 'block' : 'none';
+    document.getElementById('success-msg').style.display = 'none';
+    document.getElementById('tabs-menu').style.display = 'flex';
+    
+    document.getElementById('tab-novo').classList.toggle('active', tab === 'novo');
+    document.getElementById('tab-lista').classList.toggle('active', tab === 'lista');
+    
+    if(tab === 'lista') carregarTickets();
+}
+
+async function salvarTicket() {
+    const btn = document.getElementById('btn-enviar');
+    const nome = document.getElementById('nome').value;
+    const solicitacao = document.getElementById('solicitacao').value;
+    const prioridade = document.getElementById('prioridade').value;
+
+    if(!nome || !solicitacao) {
+        alert("Preencha o nome e a descrição.");
+        return;
+    }
+
+    if(!supabase) {
+        alert("O sistema ainda está carregando. Espere 2 segundos e tente de novo.");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "PROCESSANDO...";
+
+    try {
+        const { error } = await supabase
+            .from('tickets')
+            .insert([{ nome, solicitacao, prioridade, status: 'pendente' }]);
+
+        if(!error) {
+            document.getElementById('form-container').style.display = 'none';
+            document.getElementById('tabs-menu').style.display = 'none';
+            document.getElementById('success-msg').style.display = 'block';
+            document.getElementById('solicitacao').value = "";
+        } else {
+            alert("Erro no banco: " + error.message);
         }
+    } catch (err) {
+        alert("Erro fatal: " + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "REGISTRAR NO SISTEMA";
+    }
+}
 
-        async function salvarTicket() {
-            const btn = document.getElementById('btn-enviar');
-            const nome = document.getElementById('nome').value;
-            const solicitacao = document.getElementById('solicitacao').value;
-            const prioridade = document.getElementById('prioridade').value;
+async function carregarTickets() {
+    if(!supabase) return;
+    const content = document.getElementById('lista-content');
+    content.innerHTML = '<p style="color:#555">Sincronizando...</p>';
 
-            if(!nome || !solicitacao) {
-                alert("Dree, avisa eles que o nome e a descrição são obrigatórios!");
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerText = "PROCESSANDO...";
-
-            const { error } = await supabase
-                .from('tickets')
-                .insert([{ nome, solicitacao, prioridade, status: 'pendente' }]);
-
-            if(!error) {
-                // Esconde o form e as abas para focar no sucesso
-                document.getElementById('form-container').style.display = 'none';
-                document.getElementById('tabs-menu').style.display = 'none';
-                document.getElementById('success-msg').style.display = 'block';
-                
-                // Limpa os campos para o próximo
-                document.getElementById('solicitacao').value = "";
-                document.getElementById('nome').selectedIndex = 0;
-            } else {
-                alert("Erro ao salvar: " + error.message);
-                console.error(error);
-            }
-            
-            btn.disabled = false;
-            btn.innerText = "REGISTRAR NO SISTEMA";
-        }
-
-        async function carregarTickets() {
-            const content = document.getElementById('lista-content');
-            content.innerHTML = '<p style="color:#555">Sincronizando...</p>';
-
-            const { data: tickets, error } = await supabase
-                .from('tickets')
-                .select('*')
+    const { data: tickets, error } = await supabase
+        .from('tickets')
+        .select('*')
                 .order('id', { ascending: false });
 
-            if(error) {
-                content.innerHTML = '<p style="color:red">Erro de conexão.</p>';
-                return;
-            }
+    if(error) {
+        content.innerHTML = '<p style="color:red">Erro ao buscar dados.</p>';
+        return;
+    }
 
-            content.innerHTML = tickets.map(t => `
-                <div class="ticket-item" style="opacity: ${t.status === 'feito' ? '0.3' : '1'}">
-                    <input type="checkbox" onchange="alternarStatus(${t.id}, '${t.status}')" ${t.status === 'feito' ? 'checked' : ''}>
-                    <div class="ticket-info">
-                        <div style="font-weight: 700; font-size: 0.85rem; color: var(--accent);">${t.nome}</div>
-                        <div style="font-size: 0.9rem; margin: 4px 0; line-height: 1.4;">${t.solicitacao}</div>
-                        <div style="font-size: 0.6rem; color: #555; font-family: 'JetBrains Mono';">${t.prioridade}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
+    content.innerHTML = tickets.map(t => `
+        <div class="ticket-item" style="opacity: ${t.status === 'feito' ? '0.3' : '1'}">
+            <input type="checkbox" onchange="alternarStatus(${t.id}, '${t.status}')" ${t.status === 'feito' ? 'checked' : ''}>
+            <div class="ticket-info">
+                <div style="font-weight: 700; font-size: 0.85rem; color: var(--accent);">${t.nome}</div>
+                <div style="font-size: 0.9rem; margin: 4px 0; line-height: 1.4;">${t.solicitacao}</div>
+                <div style="font-size: 0.6rem; color: #555; font-family: 'JetBrains Mono';">${t.prioridade}</div>
+            </div>
+        </div>
+    `).join('');
+}
 
-        async function alternarStatus(id, statusAtual) {
-            const novoStatus = statusAtual === 'feito' ? 'pendente' : 'feito';
-            await supabase.from('tickets').update({ status: novoStatus }).eq('id', id);
-            carregarTickets();
-        }
+async function alternarStatus(id, statusAtual) {
+    const novoStatus = statusAtual === 'feito' ? 'pendente' : 'feito';
+    await supabase.from('tickets').update({ status: novoStatus }).eq('id', id);
+    carregarTickets();
+}
+
+// Inicializa tudo quando a página abre
+window.onload = initSupabase;
     </script>
 </body>
 </html>
